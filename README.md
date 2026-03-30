@@ -206,17 +206,3 @@ If you’re working in BigQuery:
 - FinOps Foundation (2023)  
 - Gohil (2025) — BigQuery Cost Optimization  
 
----
-
-## 11. Final Thought
-
-This project starts simple—just writing SQL—but it quickly turns into something deeper:
-
-You begin to see how:
-- Query design  
-- Data structure  
-- Cost models  
-
-…are tightly connected.
-
-That’s the shift from writing queries to thinking like a data engineer.
