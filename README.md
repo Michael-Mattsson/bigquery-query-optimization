@@ -1,208 +1,82 @@
-# Warehouse Performance Benchmark Study in BigQuery
+# Warehouse Performance Benchmark Study (BigQuery)
 
-**Author:** Michael Mattsson  
-**Date:** March 2026  
-**Project Type:** SQL Optimization / Data Engineering Case Study  
+> In modern cloud warehouses, poorly designed data systems—not slow queries—are the primary source of inefficiency.
 
-**Summary:**  
-This project benchmarks different query optimization strategies in BigQuery using large-scale Google Trends data. The goal is to understand how query design impacts runtime, cost, and scalability in a cloud data warehouse.
+## Overview
 
----
+This project benchmarks how different optimization strategies impact query performance and cost in Google BigQuery using large-scale datasets (40M–200M+ rows).
 
-## 1. Introduction
+The goal was to understand where performance gains actually come from:
+- Writing better SQL  
+- Designing better data systems  
 
-Working with large datasets in cloud warehouses like BigQuery can quickly become expensive and slow if queries are not designed efficiently.
+## What I Did
 
-This project explores a simple but important question:
+I implemented and compared three query strategies:
 
-> *How much does query optimization actually matter in BigQuery?*
+- **Baseline (Naive):** No optimization, full table scans  
+- **SQL Optimized:** Applied filtering, column reduction, and join improvements  
+- **Architecture Optimized:** Partitioned and clustered tables for efficient data access  
 
-To answer that, I tested three approaches:
-- **Naive (baseline)** — no optimization
-- **SQL optimized** — better query design
-- **Architecture optimized** — partitioning and clustering
+Each approach was evaluated using:
+- Runtime  
+- Bytes scanned  
+- Query cost  
 
----
+Follow-up queries were also executed to simulate real-world repeated workloads.
 
-## 2. Dataset
+## Key Results
 
-This project uses the **Google Trends public dataset** available in BigQuery.
+- ~15x faster execution  
+- ~100x reduction in data scanned  
+- ~100x reduction in query cost  
 
-### Tables Used
-- `top_terms` (~43.9M rows)
-- `top_rising_terms` (~43.8M rows)
-- `international_top_terms` (~205.8M rows)
-- `international_top_rising_terms` (~95.6M rows)
+The largest improvements came from **data layout optimization**, not just SQL changes.
 
-### Key Columns
-- `term`, `week`
-- `score`, `rank`, `percent_gain`
-- `dma_name`, `dma_id`
-- `country_name`, `region_name`
+## Why This Matters
 
-### Why This Dataset?
-- Large enough to expose performance differences  
-- Requires multiple joins (real-world scenario)  
-- Time-based structure (ideal for partitioning)  
+BigQuery (and similar cloud warehouses) charge based on **data scanned**, not compute time.
 
----
+This means:
+- Inefficient queries scale costs quickly  
+- Optimization directly impacts business spend  
+- Data architecture decisions have long-term effects  
 
-## 3. Problem Statement
+This project demonstrates that:
+> Designing data systems correctly is more impactful than optimizing queries in isolation.
 
-Analytical queries on large datasets often:
-- Scan excessive amounts of data  
-- Generate large intermediate joins  
-- Lead to high costs in pay-per-query systems  
+## Tools & Technologies
 
-In BigQuery specifically:
+- Google BigQuery  
+- SQL  
+- Public dataset: `google_trends`  
+- Query performance metrics (bytes scanned, cost estimation)  
 
-> **Cost is driven by bytes processed, not query complexity.**
+## How It Was Done
 
-So inefficient queries don’t just run slower — they cost more.
+- Built a baseline query joining multiple large tables  
+- Applied SQL optimizations (filtering early, reducing intermediate data)  
+- Created partitioned and clustered tables  
+- Benchmarked performance across strategies  
+- Compared initial vs repeated query performance  
 
----
+## Key Takeaways
 
-## 4. Methodology
+- Query optimization provides short-term gains  
+- Architecture optimization provides scalable, long-term efficiency  
+- The primary cost driver in BigQuery is **data scanned**  
+- Partitioning and clustering dramatically reduce repeated query cost  
 
-This study evaluates performance across three levels of optimization:
+## Project Structure
 
-### 1. Naive (Baseline)
-- Full table scans  
-- No filtering before joins  
-- Redundant columns selected  
-- No cost awareness  
+- `/queries` → SQL scripts for each strategy  
+- `/analysis` → benchmarking results and comparisons  
+- `/visuals` → charts and performance screenshots  
+- `/report` → full case study write-up  
 
-### 2. SQL Optimized
-- Filter early (CTEs)  
-- Column pruning (no `SELECT *`)  
-- Reduced intermediate data  
-- Cleaner joins  
+## Next Steps / Improvements
 
-### 3. Architecture Optimized (Conceptual)
-- Partitioning by `week`  
-- Clustering by join keys (`term`, `region`, etc.)  
-- Potential for materialized views  
-
----
-
-## 5. SQL Optimization Strategy
-
-### Filter Early
-
-Each table is filtered before joins:
-
-```sql
-WHERE week >= DATE_SUB(latest_week, INTERVAL 1 YEAR)
-```
-
-This reduces:
-- Data scanned  
-- Join size  
-- Intermediate results  
-
----
-
-### Column Pruning
-
-Instead of:
-
-```sql
-SELECT *
-```
-
-Only required columns are selected:
-
-```sql
-SELECT term, score, rank, week
-```
-
-This directly reduces bytes processed.
-
----
-
-### Join Efficiency
-
-- Avoid redundant columns already enforced by joins  
-- Remove duplicate fields (e.g., same `term`, `week` across tables)  
-- Keep only necessary dimensions  
-
----
-
-## 6. Performance Comparison
-
-| Strategy              | Runtime (sec) | Bytes Processed (GB) | Estimated Cost ($) | Rows Output |
-|---------------------|--------------|----------------------|--------------------|-------------|
-| Naive (Baseline)     | 51.48        | 38.14               | 0.186              | ~6B         |
-| SQL Optimized        | ~10–20*      | 32.16               | 0.143              | ~1B         |
-| Architecture Optimized | TBD         | TBD                 | TBD                | TBD         |
-
-\*Runtime significantly reduced; exact value depends on execution conditions
-
----
-
-### Key Improvements
-
-- **~80% reduction in output rows** (6B → 1B)  
-- **~15% reduction in data scanned** (38GB → 32GB)  
-- **Major runtime improvement** due to reduced join complexity  
-
----
-
-### Interpretation
-
-- Most performance gains came from **reducing intermediate data**
-- Cost improvement was **moderate**, not proportional to runtime
-- Indicates **column scanning dominates pricing**, not result size
-
----
-
-> ⚠️ **Important Insight**  
-> Reducing rows does NOT guarantee lower cost in BigQuery.  
-> Cost is driven by **columns scanned**, not output size.
-
----
-
-## 7. Tradeoffs
-
-| Strategy | Pros | Cons |
-|--------|------|------|
-| Naive | Simple | Expensive, slow |
-| SQL Optimized | Faster, cleaner | Limited cost reduction |
-| Architecture Optimized | Lowest cost, scalable | Requires setup & maintenance |
-
----
-
-## 8. Key Takeaways
-
-- Filtering early matters more than anything  
-- Joins are the biggest cost driver  
-- Reducing rows ≠ reducing cost  
-- Column selection directly impacts pricing  
-- True cost reduction comes from data layout (partitioning/clustering)  
-
-> You don’t optimize queries for syntax — you optimize them for **data movement**.
-
----
-
-## 9. Recommendations
-
-If you’re working in BigQuery:
-
-- Always filter on **partition columns**  
-- Never use `SELECT *` in production queries  
-- Design tables based on **query patterns**, not just storage  
-- Monitor **bytes processed**, not just runtime  
-- Use clustering for high-frequency join/filter columns  
-
----
-
-## 10. Sources
-
-- Google Cloud BigQuery Documentation  
-- Melnik et al. (2010) — *Dremel: Interactive Analysis of Web-Scale Datasets*  
-- Selinger et al. (1979) — *Access Path Selection in RDBMS*  
-- Leis et al. (2021) — *Cost-Optimal Query Processing*  
-- Zhang et al. (2024) — *Cost-Intelligent Data Analytics in the Cloud*  
-- FinOps Foundation (2023)  
-- Gohil (2025) — BigQuery Cost Optimization  
-
+- Add materialized view benchmarks  
+- Compare with other warehouses (Snowflake, Redshift)  
+- Simulate multi-user workloads  
+- Build a cost monitoring dashboard  
