@@ -23,9 +23,9 @@ Each approach was evaluated using:
 - Bytes scanned  
 - Query cost  
 
-Follow-up queries were also executed to simulate real-world repeated workloads.
+Follow-up queries were also executed to simulate repeated workloads.
 
-## Key Results
+## Key Results (from Baseline to Architecture Optimized)
 
 - ~15x faster execution  
 - ~100x reduction in data scanned  
@@ -55,7 +55,7 @@ This project demonstrates that:
 ## How It Was Done
 
 - Built a baseline query joining multiple large tables  
-- Applied SQL optimizations (filtering early, reducing intermediate data)  
+- Applied SQL optimizations (filtering early, reducing intermediate data, joins)  
 - Created partitioned and clustered tables  
 - Benchmarked performance across strategies  
 - Compared initial vs repeated query performance  
