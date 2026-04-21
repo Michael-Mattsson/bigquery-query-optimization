@@ -1,6 +1,6 @@
 # Warehouse Performance Benchmark Study (BigQuery)
 
-👉 [Read Full Case Study](./report)
+👉 [Read Full Case Study](./full_report)
 
 > In modern cloud warehouses, poorly designed data systems—not slow queries—are the primary source of inefficiency.
 
