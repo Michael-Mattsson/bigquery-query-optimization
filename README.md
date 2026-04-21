@@ -2,7 +2,7 @@
 
 👉 [Read Full Case Study](./full_report.md)
 
-## Full Report [Download PDF version](./final_report.pdf)
+👉 [Download Full report PDF version](./final_report.pdf)
 
 
 > In modern cloud warehouses, poorly designed data systems—not slow queries—are the primary source of inefficiency.
