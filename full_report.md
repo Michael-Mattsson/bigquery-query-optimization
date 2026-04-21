@@ -247,6 +247,6 @@ Architecture optimization delivers **system-level efficiency at scale**.
 
 ## Project Structure
 
-- Queries: (./queries/)
-- Visuals: (./visuals/)
+- Queries: [queries](./queries/)
+- Visuals: [visuals](./visuals/)
 
